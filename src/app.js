@@ -7,11 +7,12 @@ const cors = require("cors");
 const errorHandler = require("./utils/Error");
 var indexRouter = require("./routes/index");
 const path = require("path");
-const dbFunctions = require('./db/dbFunctions')
-const db = require('./db/db.json')
+const dbFunctions = require('./db/dbFunctions');
+const { existsSync } = require("fs");
+// const db = require('./db/db.json')
 const server = async () => {
     try {
-        if (!db)
+        if (!existsSync("src/db/db.json"))
             dbFunctions.init()
         var app = express();
         app.use(cors());
@@ -19,7 +20,7 @@ const server = async () => {
         app.use(morgan("dev"));
         app.use(express.json({ limit: "50mb" }));
         app.use(express.urlencoded({ extended: false }));
-        app.use("/api/v1", indexRouter);
+        app.use("/api", indexRouter);
 
         app.get("/*", (req, res) => {
             res.sendFile(path.resolve(__dirname, "..", "client/build", "index.html"));
