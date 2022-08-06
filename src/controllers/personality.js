@@ -24,7 +24,8 @@ module.exports = {
         return {
             testId,
             question,
-            answers
+            answers,
+            hasNext: true
         }
     },
     getRandomScore() {
@@ -40,7 +41,7 @@ module.exports = {
         let answer = dbFunctions.get(tables.answers, answerId)
         let test = dbFunctions.get(tables.tests, testId)
         let currentQuestion = null
-        let nextQuestion = false
+        let hasNext = false
         test.test = test.test.map(_t => {
             if (_t.question.id === questionId && _t.answer) throw new Error("You have already been answered this question!")
             if (_t.question.id === questionId) return {
@@ -49,14 +50,14 @@ module.exports = {
                 score: this.getRandomScore()
             }
             if (!currentQuestion && !_t.answer) currentQuestion = _t.question
-            else if (!_t.answer) nextQuestion = true
+            else if (!_t.answer) hasNext = true
             return _t
         })
         let answers = []
         if (currentQuestion)
             answers = this.getAnswersForQuestion(currentQuestion.id)
         dbFunctions.update(tables.tests, testId, test)
-        return { question: currentQuestion, nextQuestion, answers }
+        return { question: currentQuestion, hasNext, answers }
     },
     submit(obj = {}) {
         let {
@@ -68,7 +69,7 @@ module.exports = {
         let answer = dbFunctions.get(tables.answers, answerId)
         let test = dbFunctions.get(tables.tests, testId)
         if (test.totalScore) throw new Error("test is already been cleared!")
-        let remaining = test.test.filter(_t => !_t.answwer)
+        let remaining = test.test.filter(_t => !_t.answer)
         if (remaining.length > 1) throw new Error("There are pending questions!")
         let index = test.test.findIndex(_t => _t.question.id == questionId)
         test.test[index] = { ...test.test[index], answer, score: this.getRandomScore() }
